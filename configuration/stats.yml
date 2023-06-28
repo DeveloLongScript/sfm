@@ -1,0 +1,9 @@
+apiUsage:
+  - name: 6/23/2023
+    requests: -1
+  - name: 6/24/2023
+    requests: 11
+  - name: 6/25/2023
+    requests: 26027
+  - name: 6/26/2023
+    requests: 2378
