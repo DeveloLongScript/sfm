@@ -1,0 +1,15 @@
+.insetContents {
+  margin-top: 20px;
+  margin-bottom: 5px;
+  margin-left: 20px;
+  margin-right: 5px;
+}
+
+body {
+  background-color: #0A1929;
+  color: white;
+}
+
+.appBar {
+  background-color: #001E3C;
+}
