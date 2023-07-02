@@ -4,6 +4,7 @@ import { enchanceRead } from "@/enchanceUtil";
 import { NextApiRequest, NextApiResponse } from "next";
 
 export default (req: NextApiRequest, res: NextApiResponse) => {
+  // right perms and if setup yet
   if (enchanceRead().setupYet != false && authenticate(req, "A")) {
     if (
       req.headers["username"] == undefined ||
@@ -16,6 +17,7 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
           message: "You need both a permissions and a name header.",
         });
     } else {
+      // read config
       var config: ConfType = readConfiguration();
       var whatElement: {
         name: string;

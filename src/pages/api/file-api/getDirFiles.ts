@@ -4,7 +4,6 @@ import * as fs from "fs";
 import * as path from "path";
 import { getDirectoriesRecursive } from "@/fileUtil";
 import { NextApiRequest, NextApiResponse } from "next";
-import getFileStruct from "@/structUtil";
 import { runMiddleware } from "@/corsUtil";
 import Cors from "cors";
 import requestMiddleware from "@/requestStats";
@@ -19,61 +18,64 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
     })
   );
   requestMiddleware();
-  if (enchanceRead().setupYet != false && authenticate(req, "R")) {
-    if (req.headers["from-dir"] != undefined) {
-      if (fs.existsSync(path.join(<string>(readConfiguration() as ConfType).storageLocation, <string>req.headers["from-dir"]))) {
-        const filesInDir = fs.readdirSync(
-          path.join(
-            <string>enchanceRead().storageLocation,
-            req.headers["from-dir"] as string
-          )
-        );
-        const formattedFiles: Array<{ type: string; name: string }> = [];
-        for (const file in filesInDir) {
-          if (
-            fs
-              .statSync(
-                path.join(
+  authenticate(req, "R").then((result) => {
+    if (enchanceRead().setupYet != false && result == true) {
+      if (req.headers["from-dir"] != undefined) {
+        if (fs.existsSync(path.join(<string>(readConfiguration() as ConfType).storageLocation, <string>req.headers["from-dir"]))) {
+          const filesInDir = fs.readdirSync(
+            path.join(
+              <string>enchanceRead().storageLocation,
+              req.headers["from-dir"] as string
+            )
+          );
+          const formattedFiles: Array<{ type: string; name: string }> = [];
+          for (const file in filesInDir) {
+            if (
+              fs
+                .statSync(
                   path.join(
-                    <string>enchanceRead().storageLocation,
-                    req.headers["from-dir"] as string
-                  ),
-                  filesInDir[file]
+                    path.join(
+                      <string>enchanceRead().storageLocation,
+                      req.headers["from-dir"] as string
+                    ),
+                    filesInDir[file]
+                  )
                 )
-              )
-              .isDirectory()
-          ) {
-            formattedFiles.push({ type: "folder", name: filesInDir[file] });
-          } else {
-            formattedFiles.push({ type: "file", name: filesInDir[file] });
+                .isDirectory()
+            ) {
+              formattedFiles.push({ type: "folder", name: filesInDir[file] });
+            } else {
+              formattedFiles.push({ type: "file", name: filesInDir[file] });
+            }
           }
+          res.send({ code: 200, data: formattedFiles });
+        } else {
+          res.status(400).send({
+            code: 400,
+            message:
+              "Cannot find directory.",
+          });
         }
-        res.send({ code: 200, data: formattedFiles });
       } else {
-        res.status(400).send({
-          code: 400,
-          message:
-            "Cannot find directory.",
-        });
+        res
+          .status(400)
+          .send({ code: 400, message: "No 'from-dir' header given." });
       }
     } else {
-      res
-        .status(400)
-        .send({ code: 400, message: "No 'from-dir' header given." });
+      if (enchanceRead().storageLocation == "|||||||||tampered|||||||||") {
+        res
+          .status(500)
+          .send({
+            code: 500,
+            message:
+              "It looks like the configuration file has been tampered with.",
+          });
+      } else {
+        res
+          .status(500)
+          .send({ code: 500, message: "SFM hasn't been configured yet." });
+      }
     }
-  } else {
-    if (enchanceRead().storageLocation == "|||||||||tampered|||||||||") {
-      res
-        .status(500)
-        .send({
-          code: 500,
-          message:
-            "It looks like the configuration file has been tampered with.",
-        });
-    } else {
-      res
-        .status(500)
-        .send({ code: 500, message: "SFM hasn't been configured yet." });
-    }
-  }
+  })
+  
 };

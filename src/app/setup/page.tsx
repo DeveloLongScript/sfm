@@ -86,7 +86,7 @@ function HorizontalLinearStepper() {
   fetch("/api/setup-api/isSetup").then((data) => {
     data.json().then((realdata) => {
       if ((realdata as any).data == true) {
-        window.location.pathname = "/";
+        window.location.pathname = "/setup/login";
       } else {
         setBackdropOpen(false);
       }
@@ -169,7 +169,7 @@ function HorizontalLinearStepper() {
       headers: { password: stepProfile.password, username: stepProfile.username, path: stepProfile.path },
       method: "POST",
     }).then(() => {
-      window.location.replace("/?message=After setup, you need to login with the provided username and password.")
+      window.location.pathname = "/setup/login"
     })
   };
 

@@ -3,61 +3,81 @@ import { ConfType, readConfiguration } from "./configUtil";
 import { config } from "process";
 import { enchanceRead } from "./enchanceUtil";
 
+/**
+ * check perms of the current session
+ * @param req request to check
+ * @param reqPerms what perms to require
+ * @returns indicating if the user has the correct permissions
+ */
 export default function authenticate(
   req: NextApiRequest,
   reqPerms: String
-): boolean {
-  if (enchanceRead().setupYet != false) {
-    var sessionCookie = req.cookies.loginToken;
-    if (sessionCookie == undefined) {
-      var config: ConfType = readConfiguration();
-      var allPerms = reqPerms.split("");
-      var allUserPerms = config.guestPermissions?.split("");
-      var verifedPerms: string[] = [];
-      allUserPerms?.forEach((perm) => {
-        if (allPerms.includes(perm)) {
-          verifedPerms.push(perm);
-        }
-      });
-      var verifedString = "";
-
-      verifedPerms.forEach((perm) => {
-        verifedString = verifedString.concat(perm);
-      });
-
-      if (reqPerms == verifedString) {
-        return true;
-      } else {
-        return false;
-      }
-    }
-
-    var config: ConfType = readConfiguration();
-    config.userList?.forEach((user) => {
-      if (user.token == sessionCookie) {
+): Promise<boolean> {
+  return new Promise((resolve, reject) => {
+    // if setup yet (essential)
+    if (enchanceRead().setupYet != false) {
+      // cookie being logged in with
+      var sessionCookie = req.cookies.loginToken;
+      if (sessionCookie == undefined) {
+        // resort to guest permissions
+        var config: ConfType = readConfiguration();
         var allPerms = reqPerms.split("");
-        var allUserPerms = user.globalPermissions.split("");
+        // splits perms into list (^ and down)
+        var allUserPerms = config.guestPermissions?.split("");
         var verifedPerms: string[] = [];
-        allUserPerms.forEach((perm) => {
+        // checks for all permissions qualifying
+        allUserPerms?.forEach((perm) => {
           if (allPerms.includes(perm)) {
             verifedPerms.push(perm);
           }
         });
         var verifedString = "";
 
+        // sorts them accordingly
         verifedPerms.forEach((perm) => {
           verifedString = verifedString.concat(perm);
         });
 
+        // checks if they match
         if (reqPerms == verifedString) {
-          return true;
+          resolve(true)
         } else {
-          return false;
+          resolve(false)
         }
       }
-    });
-  } else {
-    return false;
-  }
-  return false;
+      // using current user permissions
+      var config: ConfType = readConfiguration();
+      config.userList?.forEach((user) => {
+        // finds appropriate user
+        if (user.token == sessionCookie) {
+          var allPerms = reqPerms.split("");
+          // splits perms into list (^ and down)
+          var allUserPerms = user.globalPermissions.split("");
+
+          var verifedPerms: string[] = [];
+          // checks for all permissions qualifying
+          allUserPerms.forEach((perm) => {
+            if (allPerms.includes(perm)) {
+              verifedPerms.push(perm);
+            }
+          });
+
+          var verifedString = "";
+
+          // sorts them accordingly
+          verifedPerms.forEach((perm) => {
+            verifedString = verifedString.concat(perm);
+          });
+          // checks if they match
+          if (reqPerms == verifedString) {
+            resolve(true)
+          } else {
+            resolve(false)
+          }
+        }
+      });
+    } else {
+      resolve(false)
+    }
+  });
 }

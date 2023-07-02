@@ -7,8 +7,5 @@ userList:
   - name: Lucas
     globalPermissions: A
     password: hello
-    token: IrA0kfIL
-  - name: Cool
-    globalPermissions: R
-    password: guy
-    token: IHSOqAc8
+    token: QEW15RFG
+guestPermissions: RWTS

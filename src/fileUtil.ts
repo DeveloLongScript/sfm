@@ -10,10 +10,6 @@ export function removeLeadingDirectory(directoryPath: string): string {
   return directoryPath;
 }
 
-
-
-
-
 export function getDirectoriesRecursive(directoryPath: string): string[] {
   directoryPath = normalizeDirectoryPath(directoryPath);
 

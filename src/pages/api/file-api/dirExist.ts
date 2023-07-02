@@ -5,7 +5,6 @@ import Cors from "cors"
 import * as path from "path"
 import * as fs from "fs"
 import { runMiddleware } from "@/corsUtil";
-import getFileStruct from "@/structUtil";
 import requestMiddleware from "@/requestStats";
 import { ConfType, readConfiguration } from "@/configUtil";
 import authenticate from "@/authUtil";
@@ -15,7 +14,8 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
         methods: ['POST', 'GET', 'HEAD'],
       }))
     requestMiddleware();
-    if (enchanceRead().setupYet != false && authenticate(req, "R")) {
+    authenticate(req, "R").then((result) => {
+      if (enchanceRead().setupYet != false && result == true) {
         if (req.headers["dir-exist"] != undefined) {
             res.send({
               code: 200,
@@ -34,4 +34,6 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
             res.status(500).send({code: 500, message: "SFM hasn't been configured yet."})
         }
     }
+    })
+    
 }

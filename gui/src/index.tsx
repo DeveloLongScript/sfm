@@ -8,7 +8,6 @@ import PluginPage from "./pages/PlugPage";
 const root = ReactDOM.createRoot(
   document.body as HTMLElement
 );
-
 root.render(
   <React.StrictMode>
     <BrowserRouter>

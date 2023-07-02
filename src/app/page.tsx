@@ -39,8 +39,6 @@ function Copyright(props: any) {
 
 export default function SignInSide() {
   const [open, setOpen] = React.useState(true);
-  var search = window.location.search;
-  var params = new URLSearchParams(search);
   var [error, setError] = React.useState(false)
 
   var message: { show: boolean; message: string } = {
@@ -48,10 +46,6 @@ export default function SignInSide() {
     message: "",
   };
 
-  if (params.get("message") != undefined) {
-    message.show = true;
-    message.message = params.get("message") as string;
-  }
 
   fetch("/api/setup-api/isSetup").then((data) => {
     data.json().then((realdata) => {
@@ -74,13 +68,17 @@ export default function SignInSide() {
         password: data.get("password") as string,
       },
     }).then((res) => res.json()).then((response) => {
-      fetch("/api/user-api/getPerms").then((res) => res.json()).then((response) => {
-        if (((response as any).data as string).includes("A")) {
+      console.log("Redirecting....")
+      fetch("/api/user-api/getPerms").then((res) => res.json()).then((responsea) => {
+        console.log("Redirecting....")
+        if (((responsea as any).data as string).includes("A")) {
+          console.log("Redirecting....")
           window.location.pathname = "/dashboard"
         } else {
           setError(true);
         }
       })
+      console.log("Redirecting...j.")
     });
   };
 
@@ -137,7 +135,7 @@ export default function SignInSide() {
             {error == true && (
               <>
                 <br />
-                <Alert severity="error">You need to have the admin permissions to log in.</Alert>
+                <Alert severity="error">Either this account doesn't have admin permissions or the incorrect username/password was inputed.</Alert>
               </>
             )}
             <Box

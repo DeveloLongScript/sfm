@@ -5,7 +5,6 @@ import Cors from "cors"
 import * as path from "path"
 import * as fs from "fs"
 import { runMiddleware } from "@/corsUtil";
-import getFileStruct from "@/structUtil";
 import requestMiddleware from "@/requestStats";
 import { ConfType, readConfiguration } from "@/configUtil";
 

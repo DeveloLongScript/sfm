@@ -17,68 +17,66 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
     })
   );
   requestMiddleware();
-  if (
-    enchanceRead().setupYet != false &&
-    authenticate(
-      req, 
-      "R" // required permissions
-    )
-  ) {
-    if (req.headers["file"] != undefined) {
-      if (
-        !fs.existsSync(
-          path.join(
-            <string>enchanceRead().storageLocation,
-            req.headers["file"] as string
-          )
-        ) ||
-        fs
-          .statSync(
+  authenticate(req, "R").then((result) => {
+    if (
+      enchanceRead().setupYet != false &&
+      result == true
+    ) {
+      if (req.headers["file"] != undefined) {
+        if (
+          !fs.existsSync(
             path.join(
               <string>enchanceRead().storageLocation,
               req.headers["file"] as string
             )
-          )
-          .isDirectory() ||
-        (req.headers["file"] as string).includes("../") ||
-        // Why is this here? I'm not taking any chances for someone to exploit out of the root folder.
-        (req.headers["file"] as string).includes("./")
-      ) {
+          ) ||
+          fs
+            .statSync(
+              path.join(
+                <string>enchanceRead().storageLocation,
+                req.headers["file"] as string
+              )
+            )
+            .isDirectory() ||
+          (req.headers["file"] as string).includes("../") ||
+          // Why is this here? I'm not taking any chances for someone to exploit out of the root folder.
+          (req.headers["file"] as string).includes("./")
+        ) {
+          res.status(400).send({
+            code: 400,
+            message: "File doesn't exist.",
+          });
+        } else {
+          res.setHeader(
+            "Content-Type",
+            <string>mime.getType(req.headers["file"] as string)
+          );
+          res.send(
+            fs.readFileSync(
+              path.join(
+                <string>enchanceRead().storageLocation,
+                req.headers["file"] as string
+              ),
+              "utf-8"
+            )
+          );
+        }
+      } else {
         res.status(400).send({
           code: 400,
-          message: "File doesn't exist.",
+          message: "No 'file' header given.",
         });
-      } else {
-        res.setHeader(
-          "Content-Type",
-          <string>mime.getType(req.headers["file"] as string)
-        );
-        res.send(
-          fs.readFileSync(
-            path.join(
-              <string>enchanceRead().storageLocation,
-              req.headers["file"] as string
-            ),
-            "utf-8"
-          )
-        );
       }
     } else {
-      res.status(400).send({
-        code: 400,
-        message: "No 'file' header given.",
-      });
-    }
-  } else {
-    if (enchanceRead().storageLocation == "|||||||||tampered|||||||||") {
-      res.status(500).send({
-        code: 500,
-        message: "It looks like the configuration file has been tampered with.",
-      });
-    } else {
-      res
-        .status(500)
-        .send({ code: 500, message: "SFM hasn't been configured yet." });
-    }
-  }
+      if (enchanceRead().storageLocation == "|||||||||tampered|||||||||") {
+        res.status(500).send({
+          code: 500,
+          message: "It looks like the configuration file has been tampered with.",
+        });
+      } else {
+        res
+          .status(500)
+          .send({ code: 500, message: "SFM hasn't been configured yet." });
+      }}
+  })
 };
