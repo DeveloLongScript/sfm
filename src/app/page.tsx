@@ -47,7 +47,7 @@ export default function SignInSide() {
   };
 
 
-  fetch("/api/setup-api/isSetup").then((data) => {
+  fetch("/api/setup-api/isSetupYet").then((data) => {
     data.json().then((realdata) => {
       if ((realdata as any).data == false) {
         window.location.pathname = "/setup";

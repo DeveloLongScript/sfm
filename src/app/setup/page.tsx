@@ -83,7 +83,7 @@ function HorizontalLinearStepper() {
   const [backdropOpen, setBackdropOpen] = useState(true);
   const [skipped, setSkipped] = useState(new Set<number>());
 
-  fetch("/api/setup-api/isSetup").then((data) => {
+  fetch("/api/setup-api/isSetupYet").then((data) => {
     data.json().then((realdata) => {
       if ((realdata as any).data == true) {
         window.location.pathname = "/setup/login";

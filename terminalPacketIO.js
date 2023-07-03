@@ -1,15 +1,10 @@
-import express from "express";
-import * as http from "http";
 import chalk from "chalk";
 import ora from "ora";
-import * as fs from "fs";
 import * as pty from "node-pty";
 import { Server } from "socket.io";
 console.log();
 
-
-
-export function enable(server) {
+export default function enable(server) {
   const spinner = ora("Getting ready.....");
   spinner.start();
   const isWin = process.platform === "win32";
@@ -35,10 +30,14 @@ export function enable(server) {
 
   spinner.succeed();
   console.log();
-  console.log(chalk.green(`SFM Terminal Service (using socket.io)`));
+  console.log(chalk.green(`                            |‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾|`));
+  console.log(chalk.green(`                            |           ` + chalk.bold("Simple File Manager") + `           |`));
+  console.log(chalk.green("                            | " + chalk.yellowBright("✔ SFM is licensed under the MIT License") + " |"))
+  console.log(chalk.green("                            |_________________________________________|"))
   console.log();
-  console.log(chalk.grey("---INFO---"));
+  console.log(chalk.grey("---INFO---"));process.versions
   console.log(chalk.green("Node version:      ") + chalk.blue(process.version));
+  console.log(chalk.green("V8 version:        ") + chalk.blue(process.versions.v8));
   console.log(
     chalk.green("Operating System:  ") + chalk.blue(isWin ? "windows" : "unix")
   );

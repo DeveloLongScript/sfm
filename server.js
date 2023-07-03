@@ -1,8 +1,8 @@
 import { createServer } from "http"
 import { parse } from "url"
-import * as next from "next"
+import next from "next"
 import * as fs from "fs"
-import enable from "./loaderUtil/terminalPacketIO"
+import enable from "./terminalPacketIO.js"
 import * as path from "path"
 const dev = process.env.NODE_ENV != "production";
 const app = next({ dev });
@@ -28,6 +28,5 @@ app.prepare().then(() => {
     }
 
     if (err) throw err;
-    console.log("> Ready on http://localhost:3000");
   });
 });
