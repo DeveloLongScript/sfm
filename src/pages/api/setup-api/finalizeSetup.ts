@@ -1,4 +1,4 @@
-import { ConfType, writeConfiguration } from "@/configUtil";
+import { ConfType, readConfiguration, writeConfiguration } from "@/configUtil";
 import { NextApiRequest, NextApiResponse } from "next";
 
 export default (req: NextApiRequest, res: NextApiResponse) => {
@@ -7,13 +7,14 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
     if (
       req.headers["password"] != undefined &&
       req.headers["username"] != undefined &&
-      req.headers["path"] != undefined
+      req.headers["path"] != undefined &&
+      readConfiguration().setupYet == false
     ) {
       var newType: ConfType = {
         setupYet: true,
         storageLocation: <string>req.headers["path"] ,
         userList: [],
-        guestPermissions: "RWTS"
+        guestPermissions: "RWT"
       };
       var token = makeToken(8);
       newType.userList?.forEach((ele) => {

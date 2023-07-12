@@ -8,7 +8,6 @@ const dev = process.env.NODE_ENV != "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-// Your API endpoint to retrieve the file structure
 app.prepare().then(() => {
   var server = createServer((req, res) => {
     const parsedUrl = parse(req.url, true);

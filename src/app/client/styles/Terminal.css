@@ -1,0 +1,54 @@
+.term {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0 50px;
+}
+.term .inner {
+  padding: 5px 20px;
+  border-radius: 4px;
+  background-color: #191919;
+}
+.term .inner.other-theme {
+  background-color: #282a36;
+}
+@font-face {
+  font-family: "Cascadia Code";
+  src: local("CascadiaCode"), url("./fonts/CascadiaCode.ttf") format("truetype");
+}
+@font-face {
+  font-family: "SF Mono";
+  src: local("SF Mono"), url("./fonts/SFMonoLight.otf") format("opentype");
+  font-weight: 100, 200, 300;
+}
+@font-face {
+  font-family: "SF Mono";
+  src: local("SF Mono"), url("./fonts/SFMonoRegular.otf") format("opentype");
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "SF Mono";
+  src: local("SF Mono"), url("./fonts/SFMonoMedium.otf") format("opentype");
+  font-weight: 500;
+}
+@font-face {
+  font-family: "SF Mono";
+  src: local("SF Mono"), url("./fonts/SFMonoSemibold.otf") format("opentype");
+  font-weight: 600;
+}
+@font-face {
+  font-family: "SF Mono";
+  src: local("SF Mono"), url("./fonts/SFMonoBold.otf") format("opentype");
+  font-weight: 700;
+}
+@font-face {
+  font-family: "SF Mono";
+  src: local("SF Mono"), url("./fonts/SFMonoHeavy.otf") format("opentype");
+  font-weight: 800;
+}
+.insetContents {
+  margin-top: 20px;
+  margin-bottom: 5px;
+  margin-left: 20px;
+  margin-right: 20px;
+}

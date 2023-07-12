@@ -30,8 +30,11 @@
     "react-hot-toast": "^2.4.1",
     "react-router-dom": "^6.11.2",
     "react-scripts": "5.0.1",
+    "socket.io": "^4.7.1",
+    "socket.io-client": "^4.7.1",
     "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "xterm-for-react": "^1.0.4"
   },
   "scripts": {
     "start": "PORT=3006 npx concurrently -n BACK,FRONT -c bgBlue,bgGreen,bgYellow \"npm run serve\" \"npm run startnoserve\" ",

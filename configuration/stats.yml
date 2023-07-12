@@ -1,13 +1,9 @@
 apiUsage:
-  - name: 6/23/2023
-    requests: -1
-  - name: 6/24/2023
-    requests: 11
-  - name: 6/25/2023
-    requests: 26027
-  - name: 6/26/2023
-    requests: 2378
-  - name: 6/30/2023
-    requests: 174
-  - name: 7/1/2023
-    requests: 384
+  - name: 7/7/2023
+    requests: 252
+  - name: 7/8/2023
+    requests: 331
+  - name: 7/9/2023
+    requests: 119
+  - name: 7/10/2023
+    requests: 390

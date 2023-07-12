@@ -5,7 +5,8 @@ import { NextApiRequest, NextApiResponse } from "next";
 
 export default (req: NextApiRequest, res: NextApiResponse) => {
   // right perms and if setup yet
-  if (enchanceRead().setupYet != false && authenticate(req, "A")) {
+  authenticate(req, "A").then((result) => {
+  if (enchanceRead().setupYet != false && result == true) {
     if (
       req.headers["username"] == undefined ||
       req.headers["permissions"] == undefined
@@ -58,5 +59,5 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
         .status(500)
         .send({ code: 500, message: "SFM hasn't been configured yet." });
     }
-  }
+  }})
 };

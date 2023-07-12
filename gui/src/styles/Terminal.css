@@ -1,0 +1,13 @@
+.term {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0 50px;
+}
+.term .inner {
+  padding: 5px 20px;
+  border-radius: 4px;
+  background-color: #191919;
+}
+.term .inner.other-theme {
+  background-color: #282a36;
+}

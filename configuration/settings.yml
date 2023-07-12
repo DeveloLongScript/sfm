@@ -7,5 +7,5 @@ userList:
   - name: Lucas
     globalPermissions: A
     password: hello
-    token: QEW15RFG
-guestPermissions: RWTS
+    token: lCxUg0rr
+guestPermissions: RWT

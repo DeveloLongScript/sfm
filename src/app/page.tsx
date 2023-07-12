@@ -4,17 +4,19 @@ import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
 import TextField from "@mui/material/TextField";
+import { Metadata } from "next";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
-import Backdrop from "@mui/material/Backdrop";
-import CircularProgress from "@mui/material/CircularProgress";
+import Link from "@mui/material/Link";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
+import Backdrop from "@mui/material/Backdrop"
+import { CircularProgress } from "@mui/material";
+import Alert from "@mui/material/Alert";
 import Grid from "@mui/material/Grid";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Typography from "@mui/material/Typography";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { Alert, Link } from "@mui/material";
 
 function Copyright(props: any) {
   return (
@@ -25,7 +27,10 @@ function Copyright(props: any) {
       {...props}
     >
       {"SFM is licensed under the "}
-      <Link color="inherit" href="https://mui.com/">
+      <Link
+        color="inherit"
+        href="https://github.com/DeveloLongScript/sfm/blob/main/LICENSE"
+      >
         MIT License
       </Link>
       <br />
@@ -37,51 +42,41 @@ function Copyright(props: any) {
   );
 }
 
+export const metadata: Metadata = {
+  title: "Login | SFM",
+  description: "Login to continue.",
+};
+
 export default function SignInSide() {
-  const [open, setOpen] = React.useState(true);
-  var [error, setError] = React.useState(false)
-
-  var message: { show: boolean; message: string } = {
-    show: false,
-    message: "",
+  var [open, setOpen] = React.useState(true);
+  var [error, setError] = React.useState(false);
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const data = new FormData(event.currentTarget);
+    fetch("/api/user-api/loginUser", {
+      headers: {
+        password: data.get("password")?.toString(),
+        username: data.get("username")?.toString(),
+      },
+    })
+      .then((data) => data.json())
+      .then((response) => {
+        if (response.code == 400) {
+          setError(true);
+        } else {
+            window.location.pathname = "/client/files"
+        }
+      });
   };
-
-
   fetch("/api/setup-api/isSetupYet").then((data) => {
     data.json().then((realdata) => {
       if ((realdata as any).data == false) {
-        window.location.pathname = "/setup";
+        window.location.pathname = "/settings/setup";
       } else {
         setOpen(false);
       }
     });
   });
-
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    setOpen(true);
-    const data = new FormData(event.currentTarget);
-    fetch("/api/user-api/loginUser", {
-      headers: {
-        username: data.get("username") as string,
-        password: data.get("password") as string,
-      },
-    }).then((res) => res.json()).then((response) => {
-      console.log("Redirecting....")
-      fetch("/api/user-api/getPerms").then((res) => res.json()).then((responsea) => {
-        console.log("Redirecting....")
-        if (((responsea as any).data as string).includes("A")) {
-          console.log("Redirecting....")
-          window.location.pathname = "/dashboard"
-        } else {
-          setError(true);
-        }
-      })
-      console.log("Redirecting...j.")
-    });
-  };
-
   return (
     <div>
       <Backdrop
@@ -109,7 +104,6 @@ export default function SignInSide() {
             backgroundPosition: "center",
           }}
         />
-
         <Grid item xs={12} sm={8} md={5} component={Paper} elevation={6} square>
           <Box
             sx={{
@@ -124,18 +118,15 @@ export default function SignInSide() {
               <LockOutlinedIcon />
             </Avatar>
             <Typography component="h1" variant="h5">
-              Config Sign in
+              Sign in
             </Typography>
-            {message.show == true && (
-              <>
-                <br />
-                <Alert severity="info">{message.message}</Alert>
-              </>
-            )}
             {error == true && (
               <>
                 <br />
-                <Alert severity="error">Either this account doesn't have admin permissions or the incorrect username/password was inputed.</Alert>
+                <br />
+                <Alert severity="error">
+                  The incorrect username/password was inputed.
+                </Alert>
               </>
             )}
             <Box
@@ -163,12 +154,6 @@ export default function SignInSide() {
                 id="password"
                 autoComplete="current-password"
               />
-              <br />
-              <Typography variant="body2" color="text.secondary" align="center">
-                This login is ONLY for the config, you will need admin
-                permissions to sign in. (if you need to look at files go to the{" "}
-                <Link>file browser</Link>)
-              </Typography>
               <Button
                 type="submit"
                 fullWidth

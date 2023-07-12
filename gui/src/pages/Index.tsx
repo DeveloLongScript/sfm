@@ -7,6 +7,7 @@ import GitHubIcon from "@mui/icons-material/GitHub";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ExtensionIcon from "@mui/icons-material/Extension";
 import Stack from "@mui/material/Stack";
+import TerminalIcon from '@mui/icons-material/Terminal';
 import Avatar from "@mui/material/Avatar";
 import { join, resolve } from "path-browserify";
 import useFetch from "react-fetch-hook";
@@ -93,12 +94,27 @@ function Index() {
   const [isListView, setListView] = useState(false);
   const [openFolderOpen, setOpenFolderOpen] = useState(false);
 
+  fetch("/api/setup-api/isSetupYet").then((data) => {
+    data.json().then((realdata) => {
+      if ((realdata as any).data == false) {
+        window.location.href = "localhost:3623/"
+      } else {
+        setOpen(false);
+      }
+    });
+  });
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.shiftKey && event.key === "A") {
         // Run your function here
         event.preventDefault();
         setOpenFolderOpen(true);
+      }
+      if (event.ctrlKey && event.shiftKey && event.key === "N") {
+        // Run your function here
+        event.preventDefault();
+        window.location.pathname = "|sfm/plugins";
       }
     };
 
@@ -371,7 +387,7 @@ function Index() {
                             </MenuItem>
                             <MenuItem
                               onClick={() => {
-                                window.location.pathname = "|plugins/";
+                                window.location.pathname = "|sfm/plugins";
                                 popupState.close();
                               }}
                             >
@@ -383,7 +399,7 @@ function Index() {
                                 variant="body2"
                                 color="text.secondary"
                               >
-                                Ctrl+Shift+P
+                                Ctrl+Shift+N
                               </Typography>
                             </MenuItem>
                             <Divider />
@@ -468,12 +484,23 @@ function Index() {
                 >
                   <ViewListIcon fontSize="small" />
                 </IconButton>
+                
+              </Grid>
+              <Grid item>
+                <IconButton
+                  color="primary"
+                  href="/|sfm/terminal"
+                >
+                  <TerminalIcon fontSize="small" />
+                </IconButton>
+                
               </Grid>
             </Grid>
 
             <br />
             <Divider />
             {isListView ? <ListView /> : <ListComp />}
+            
           </FadeIn>
         </div>
       </FadeIn>

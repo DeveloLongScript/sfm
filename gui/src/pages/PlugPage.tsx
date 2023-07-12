@@ -180,7 +180,6 @@ export default function PluginPage() {
           </DialogContent>
         </Dialog>
       <AppBar className="appBar" color="inherit">
-        <LinearProgress id="progress" />
         <Toolbar>
           <Stack direction="row" spacing="10px">
             <IconButton color="primary" sx={{ px: "8px" }} href="/">
