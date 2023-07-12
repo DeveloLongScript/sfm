@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <h1 align="center">SFM</h1>
 <div align="center">
 
