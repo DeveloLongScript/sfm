@@ -1,4 +1,7 @@
-<h1 align="center">SFM</h1>
+<h1 align="center">
+
+  ![sfm banner](https://raw.githubusercontent.com/DeveloLongScript/sfm/main/banner.png?token=GHSAT0AAAAAACBYQCGXSULIFRVEPY5GXT6AZFPI4JA)
+</h1>
 <div align="center">
 
   [![on github](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/compact/available/github_vector.svg)](https://github.com/DeveloLongScript/sfm)
