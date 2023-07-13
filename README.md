@@ -1,13 +1,13 @@
-<h1 align="center">
 
-  ![sfm banner](https://raw.githubusercontent.com/DeveloLongScript/sfm/main/abanner.png?token=GHSAT0AAAAAACBYQCGWB2NIGZRBP47CCM2OZFPJBTQ)
+<h1 align="center">
+  SFM
 </h1>
 <div align="center">
 
-  [![on github](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/compact/available/github_vector.svg)](https://github.com/DeveloLongScript/sfm)
-  ![built with next](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/compact/built-with/nextjs_vector.svg)
-  ![built with next](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/compact/built-with/typescript_vector.svg)
-  [![translate](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/compact/translate/crowdin_vector.svg)](https://crowdin.com/project/sfm)
+  [![on github](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/available/github_vector.svg)](https://github.com/DeveloLongScript/sfm)
+  [![translate](https://raw.githubusercontent.com/intergrav/devins-badges/1aec26abb75544baec37249f42008b2fcc0e731f/assets/cozy/translate/crowdin_vector.svg)](https://crowdin.com/project/sfm)
+  ![built with next](https://raw.githubusercontent.com/intergrav/devins-badges/v3/assets/cozy/built-with/nextjs_vector.svg)
+  ![installer in rust](https://raw.githubusercontent.com/DeveloLongScript/more-devins-badges/cb24d2d893aa8940f23ee35d9f212aeb3baa6ac7/cozy_vector.svg)
 <br/>
 
 <div align="center">A open-source host-it-your-self file manager including plugins, icon-packs and a API.</div>
