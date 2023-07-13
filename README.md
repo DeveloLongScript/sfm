@@ -1,6 +1,6 @@
 <h1 align="center">
 
-  ![sfm banner](https://raw.githubusercontent.com/DeveloLongScript/sfm/main/banner.png?token=GHSAT0AAAAAACBYQCGXSULIFRVEPY5GXT6AZFPI4JA)
+  ![sfm banner](https://raw.githubusercontent.com/DeveloLongScript/sfm/main/abanner.png?token=GHSAT0AAAAAACBYQCGWB2NIGZRBP47CCM2OZFPJBTQ)
 </h1>
 <div align="center">
 
