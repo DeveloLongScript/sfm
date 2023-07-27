@@ -29,7 +29,7 @@ export default (req: NextApiRequest, res: NextApiResponse) => {
               readConfiguration().storageLocation,
               <string>req.headers["file"]
             ),
-            new Buffer(<string>req.headers["write"], "base64").toString("ascii")
+            Buffer.from(<string>req.headers["write"], "base64").toString("ascii")
           );
           res.send({ code: 200, message: "Done." });
         }

@@ -119,6 +119,5 @@ export default function authenticate(
     } else {
       resolve(false);
     }
-    console.log("nowhere");
   });
 }

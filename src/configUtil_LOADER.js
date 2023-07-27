@@ -1,7 +1,3 @@
-// DO NOT and I mean DO NOT EDIT OR DELETE THIS FILE!
-// This file is used for editing the YAML file for the file struct.
-// YOUR PULL REQUEST WILL GET REJECTED IF THIS FILE IS EDITED OR DELETED
-
 var fs = require("fs");
 var path = require("path");
 var YAML = require("yaml");

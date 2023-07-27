@@ -8,4 +8,4 @@ userList:
     globalPermissions: A
     password: hello
     token: lCxUg0rr
-guestPermissions: RWT
+guestPermissions: RW

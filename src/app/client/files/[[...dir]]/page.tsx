@@ -1,8 +1,15 @@
 "use client";
 import { TitleComponent } from "../../components/TitleComp";
 import AppBar from "@mui/material/AppBar";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import SearchIcon from "@mui/icons-material/Search";
+import { CircularProgress } from "@mui/material/";
+import mime from "mime";
+import MenuIcon from "@mui/icons-material/Menu";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { Skeleton } from "@mui/material/";
 import EditIcon from "@mui/icons-material/Edit";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import GitHubIcon from "@mui/icons-material/GitHub";
@@ -15,7 +22,6 @@ import { join, resolve } from "path-browserify";
 import useFetch from "react-fetch-hook";
 import { DataGrid } from "@mui/x-data-grid";
 import MenuList from "@mui/material/MenuList";
-import MenuItem from "@mui/material/MenuItem";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import { useEffect, useState } from "react";
 import ArrowBackOutlinedIcon from "@mui/icons-material/ArrowBackOutlined";
@@ -38,8 +44,13 @@ import {
   Fade,
   ListItemIcon,
   Autocomplete,
+  Menu,
+  MenuItem,
 } from "@mui/material/";
 import "../../styles/Files.css";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import React from "react";
+import Slide from "@mui/material/Slide";
 import { Toaster, toast } from "react-hot-toast";
 import Drawer from "@mui/material/Drawer";
 import CloseIcon from "@mui/icons-material/Close";
@@ -51,13 +62,14 @@ import Divider from "@mui/material/Divider";
 import Button from "@mui/material/Button";
 import DownloadIcon from "@mui/icons-material/Download";
 import ToggleButton from "@mui/material/ToggleButton";
+import InputBase from "@mui/material/InputBase";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import { styled } from "@mui/material/styles";
+import { styled, alpha } from "@mui/material/styles";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
@@ -66,14 +78,70 @@ import AlertTitle from "@mui/material/AlertTitle";
 import Crop54Icon from "@mui/icons-material/Crop54";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import List from "@mui/material/List";
+import { TransitionProps } from "@mui/material/transitions";
 import FileOpenIcon from "@mui/icons-material/FileOpen";
 import DialogTitle from "@mui/material/DialogTitle";
+import About from "../../components/AboutAlert";
+import { LanguageVariant } from "typescript";
+import internal from "stream";
 
 var name = window.location.pathname.split("/");
 name.shift();
 name.shift();
 name.shift();
+
+const Transition = React.forwardRef(function Transition(
+  props: TransitionProps & {
+    children: React.ReactElement;
+  },
+  ref: React.Ref<unknown>
+) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
+
 var pathname = "/" + name.join("/");
+
+const Search = styled("div")(({ theme }) => ({
+  position: "relative",
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: alpha(theme.palette.common.white, 0.15),
+  "&:hover": {
+    backgroundColor: alpha(theme.palette.common.white, 0.25),
+  },
+  marginLeft: 0,
+  width: "100%",
+  [theme.breakpoints.up("sm")]: {
+    marginLeft: theme.spacing(1),
+    width: "auto",
+  },
+}));
+
+const SearchIconWrapper = styled("div")(({ theme }) => ({
+  padding: theme.spacing(0, 2),
+  height: "100%",
+  position: "absolute",
+  pointerEvents: "none",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+}));
+
+const StyledInputBase = styled(InputBase)(({ theme }) => ({
+  color: "inherit",
+  "& .MuiInputBase-input": {
+    padding: theme.spacing(1, 1, 1, 0),
+    // vertical padding + font size from searchIcon
+    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
+    transition: theme.transitions.create("width"),
+    width: "100%",
+    [theme.breakpoints.up("sm")]: {
+      width: "12ch",
+      "&:focus": {
+        width: "20ch",
+      },
+    },
+  },
+}));
 
 const Heading = styled(Typography)(({ theme }) => ({
   margin: "20px 0 10px",
@@ -84,6 +152,8 @@ const Heading = styled(Typography)(({ theme }) => ({
   letterSpacing: ".08rem",
 }));
 
+var refreshFunc = () => {};
+
 const IconToggleButton = styled(ToggleButton)({
   display: "flex",
   justifyContent: "center",
@@ -93,11 +163,177 @@ const IconToggleButton = styled(ToggleButton)({
   },
 });
 
+/**
+ * this is a boilerplate template thing because
+ * theres a bug in react that sometimes my dialogs dont show
+ * but it fixes it self with two dialogs.*/
+function FullScreenDialog(props: {
+  open: boolean;
+  setOpen: (b: boolean) => void;
+}) {
+  const handleClickOpen = () => {
+    props.setOpen(true);
+  };
+
+  const handleClose = () => {
+    props.setOpen(false);
+  };
+
+  return (
+    <div>
+      <Dialog
+        fullScreen
+        open={props.open}
+        onClose={handleClose}
+        TransitionComponent={Transition}
+      >
+        <AppBar sx={{ position: "relative" }}>
+          <Toolbar>
+            <IconButton
+              edge="start"
+              color="inherit"
+              onClick={handleClose}
+              aria-label="close"
+            >
+              <CloseIcon />
+            </IconButton>
+            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
+              Hold on....
+            </Typography>
+          </Toolbar>
+        </AppBar>
+      </Dialog>
+    </div>
+  );
+}
+
+function DragAndDropZone() {
+  const [uploadDialogVisible, setUploadDialogVisible] = useState(false);
+  var lastTarget: EventTarget | null = null;
+
+  window.addEventListener("drop", (e) => {
+    setUploadDialogVisible(false);
+    e.preventDefault();
+
+    toast.promise(
+      new Promise((good, bad) => {
+        for (var elm in e.dataTransfer?.items) {
+          var maxBase64 = 1048576;
+          var windowUrl = window.URL || window.webkitURL;
+
+          if (
+            e.dataTransfer?.files[parseInt(elm)].length > maxBase64 &&
+            typeof windowUrl.createObjectURL === "function"
+          ) {
+            var blob = new Blob([e.dataTransfer?.files[parseInt(elm)]], {
+              type: e.dataTransfer?.files[parseInt(elm)].type,
+            });
+            var url = windowUrl.createObjectURL(blob);
+
+            fetch("/api/file-api/uploadFile", {
+              headers: {
+                url: url,
+                name: e.dataTransfer?.files[parseInt(elm)].name,
+                dir: pathname,
+              },
+            })
+              .then(() => {
+                good("");
+              })
+              .catch(() => bad());
+          } else {
+            var link =
+              "data:" +
+              mime.getType(e.dataTransfer?.files[parseInt(elm)].name) +
+              ";base64," +
+              Buffer.from(elm, "utf8").toString("base64");
+            console.log({
+              url: link,
+              name: e.dataTransfer?.files[parseInt(elm)].name,
+              dir: pathname,
+            });
+            fetch("/api/file-api/uploadFile", {
+              headers: {
+                url: link,
+                name: e.dataTransfer?.files[parseInt(elm)].name,
+                dir: pathname,
+              },
+            })
+              .then(() => {
+                good("");
+              })
+              .catch(() => bad());
+          }
+        }
+      }),
+      {
+        success: "Done uploading.",
+        error: "Error uploading file.",
+        loading: "Uploading...",
+      }
+    );
+  });
+  window.addEventListener("dragleave", (e) => {
+    if (e.target === document || e.target === lastTarget) {
+      setUploadDialogVisible(false);
+    }
+  });
+  window.addEventListener("dragenter", (e) => {
+    if (isFile(e)) {
+      lastTarget = e.target;
+      setUploadDialogVisible(true);
+    }
+  });
+
+  window.addEventListener("dragover", (e) => {
+    e.preventDefault();
+  });
+  return (
+    <Dialog
+      open={uploadDialogVisible}
+      maxWidth="xl"
+      fullWidth={true}
+      onClose={() => {
+        setUploadDialogVisible(false);
+      }}
+    >
+      <DialogTitle>Upload file...</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          Stop holding the left click button to upload the file into SFM.
+        </DialogContentText>
+      </DialogContent>
+    </Dialog>
+  );
+}
+function isFile(evt: any) {
+  var dt = evt.dataTransfer;
+
+  for (var i = 0; i < dt.types.length; i++) {
+    if (dt.types[i] === "Files") {
+      return true;
+    }
+  }
+  return false;
+}
+
 export default function directory({ params }: { params: { dir: string } }) {
   const [open, setOpen] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
   const [diaOpen, setDiaOpen] = useState(false);
   const [disabled, setDisabled] = useState(true);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [uploadDialogVisible, setUploadDialogVisible] = useState(false);
+  const [refresh, setRefresh] = useState(false);
   const [isListView, setListView] = useState(false);
+
+  const [searchVis, setSearchVis] = useState(false);
+  const openSearchDialog = () => {
+    setSearchVis(true);
+  };
+  var dirRef: HTMLDivElement | null;
+  const [fieldError, setFieldError] = useState(false);
   const [openFolderOpen, setOpenFolderOpen] = useState(false);
   console.log(pathname);
   fetch("/api/setup-api/isSetupYet").then((data) => {
@@ -109,6 +345,28 @@ export default function directory({ params }: { params: { dir: string } }) {
       }
     });
   });
+  refreshFunc = () => {
+    useEffect(() => {
+      setRefresh(true);
+      setRefresh(false);
+    });
+
+    console.log("hello");
+  };
+  fetch("/api/user-api/getPerms")
+    .then((data) => data.json())
+    .then((perms) => {
+      console.log(perms.data as string);
+      if ((perms.data as string).includes("A")) {
+        setAuthenticated(true);
+      } else {
+        if ((perms.data as string).includes("T")) {
+          setAuthenticated(true);
+        } else {
+          setAuthenticated(false);
+        }
+      }
+    });
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -116,11 +374,6 @@ export default function directory({ params }: { params: { dir: string } }) {
         // Run your function here
         event.preventDefault();
         setOpenFolderOpen(true);
-      }
-      if (event.ctrlKey && event.shiftKey && event.key === "N") {
-        // Run your function here
-        event.preventDefault();
-        window.location.pathname = "|sfm/plugins";
       }
     };
 
@@ -138,14 +391,41 @@ export default function directory({ params }: { params: { dir: string } }) {
     const { isLoading, data } = useFetch(`/api/file-api/dirExist`, {
       headers: { "dir-exist": decodeURI(pathname) },
     });
+    const rand = Math.floor(Math.random() * 3);
 
     if (isLoading === true || data === undefined) {
-      return <></>;
+      return (
+        <>
+          <br />
+          <FullScreenDialog setOpen={setSearchVis} open={searchVis} />
+          {[...Array(rand)].map((e, i) => (
+            <Box>
+              <Skeleton variant="rounded" height={48} animation="wave" />
+              <br />
+              <Skeleton variant="rounded" height={48} animation="wave" />
+              <br />
+              <Skeleton variant="rounded" height={48} animation="wave" />
+              {rand == 2 && <br />}
+            </Box>
+          ))}
+          {rand == 0 && (
+            <Box>
+              <Skeleton variant="rounded" height={48} animation="wave" />
+              <br />
+              <Skeleton variant="rounded" height={48} animation="wave" />
+              <br />
+              <Skeleton variant="rounded" height={48} animation="wave" />
+            </Box>
+          )}
+        </>
+      );
     }
     return (
       <FadeIn
         className={(Math.random() * Math.random()).toString() + "-fadein"}
       >
+        <DragAndDropZone />
+        <div style={{ display: "none" }}>{refresh}</div>
         <title>{pathname} - SFM</title>
         <Toaster
           position="bottom-left"
@@ -184,6 +464,37 @@ export default function directory({ params }: { params: { dir: string } }) {
   };
   return (
     <div>
+      <Dialog
+        open={searchVis}
+        fullScreen
+        onClose={() => {
+          setSearchVis(false);
+        }}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <AppBar position="static">
+          <Toolbar>
+            <IconButton
+              size="large"
+              edge="start"
+              color="inherit"
+              aria-label="menu"
+              sx={{ mr: 2 }}
+              onClick={() => {
+                setSearchVis(false);
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              Search
+            </Typography>
+          </Toolbar>
+        </AppBar>
+        <SearchList pattern={searchKeyword} />
+      </Dialog>
+      <About setOpen={setAboutOpen} open={aboutOpen} />
       <div>
         <Dialog
           open={openFolderOpen}
@@ -218,22 +529,70 @@ export default function directory({ params }: { params: { dir: string } }) {
             <Box>
               <DialogContentText>
                 To directly open a folder, enter the folder location (ex. "/"),
-                and click the suggested folder you would like to go to and SFM
-                will take you there.
+                and click the "Done" button and SFM will take you there.
               </DialogContentText>
 
-              <AutoCompleteDirectory
-                onEmpty={() => {
-                  setDisabled(true);
+              <TextField
+                autoFocus
+                margin="dense"
+                label="Folder Location"
+                error={fieldError}
+                defaultValue={pathname}
+                helperText={
+                  fieldError ? "That isn't a valid directory" : undefined
+                }
+                fullWidth
+                onKeyDown={(key) => {
+                  if (key.key == "Enter") {
+                    var input = (
+                      dirRef?.children[1].children[0] as HTMLInputElement
+                    ).value;
+
+                    fetch("/api/file-api/dirExist", {
+                      headers: { "dir-exist": input },
+                    })
+                      .then((res) => res.json())
+                      .then((result) => {
+                        if (result.data == false) {
+                          setFieldError(true);
+                        } else {
+                          setOpenFolderOpen(false);
+                          window.location.pathname = "/client/files/" + input;
+                        }
+                      });
+                  }
                 }}
-                onUnempty={() => {
-                  setDisabled(false);
+                ref={(ref) => {
+                  dirRef = ref;
                 }}
+                variant="standard"
               />
-              <br />
-              <br />
             </Box>
           </DialogContent>
+          <DialogActions>
+            <Button
+              onClick={() => {
+                var input = (
+                  dirRef?.children[1].children[0] as HTMLInputElement
+                ).value;
+
+                fetch("/api/file-api/dirExist", {
+                  headers: { "dir-exist": input },
+                })
+                  .then((res) => res.json())
+                  .then((result) => {
+                    if (result.data == false) {
+                      setFieldError(true);
+                    } else {
+                      setOpenFolderOpen(false);
+                      window.location.pathname = "/client/files/" + input;
+                    }
+                  });
+              }}
+            >
+              Done
+            </Button>
+          </DialogActions>
         </Dialog>
         <Dialog open={diaOpen}>
           <DialogTitle id="alert-dialog-title">{""}</DialogTitle>
@@ -334,7 +693,7 @@ export default function directory({ params }: { params: { dir: string } }) {
           </Box>
         </Drawer>
       </div>
-      <AppBar className="appBar" color="inherit">
+      <AppBar className="appBar" color="inherit" style={{ zIndex: "30" }}>
         <LinearProgress id="progress" />
         <Toolbar>
           <Stack direction="row" spacing="10px">
@@ -354,20 +713,7 @@ export default function directory({ params }: { params: { dir: string } }) {
                   <Popper {...bindPopper(popupState)} transition>
                     {({ TransitionProps }) => (
                       <Fade {...TransitionProps} timeout={350}>
-                        <Paper
-                          sx={(theme) => ({
-                            mt: 2,
-                            border: "1px solid",
-                            borderColor: "grey.200",
-                            boxShadow: `0px 4px 20px rgba(170, 180, 190, 0.3)`,
-                            maxWidth: "100%",
-                            width: 270,
-                            ...theme.applyDarkStyles({
-                              borderColor: "primaryDark.700",
-                              boxShadow: `0px 4px 20px rgba(0, 0, 0, 0.5)`,
-                            }),
-                          })}
-                        >
+                        <Paper style={{ width: 300, zIndex: 11 }}>
                           <MenuList>
                             <Heading sx={{ paddingLeft: 1.5 }}>Open</Heading>
                             <MenuItem
@@ -387,26 +733,14 @@ export default function directory({ params }: { params: { dir: string } }) {
                                 Ctrl+Shift+A
                               </Typography>
                             </MenuItem>
+                            <Divider />
+                            <Heading sx={{ paddingLeft: 1.5 }}>Program</Heading>
                             <MenuItem
                               onClick={() => {
-                                window.location.pathname = "|sfm/plugins";
+                                setAboutOpen(true);
                                 popupState.close();
                               }}
                             >
-                              <ListItemIcon>
-                                <ExtensionIcon />
-                              </ListItemIcon>
-                              <ListItemText>Open plugins</ListItemText>
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                Ctrl+Shift+N
-                              </Typography>
-                            </MenuItem>
-                            <Divider />
-                            <Heading sx={{ paddingLeft: 1.5 }}>Program</Heading>
-                            <MenuItem>
                               <ListItemIcon>
                                 <InfoOutlinedIcon />
                               </ListItemIcon>
@@ -446,6 +780,26 @@ export default function directory({ params }: { params: { dir: string } }) {
             >
               <SettingsOutlinedIcon fontSize="small" />
             </IconButton>
+
+            <Search>
+              <SearchIconWrapper>
+                <SearchIcon />
+              </SearchIconWrapper>
+              <StyledInputBase
+                placeholder="Search... (hit enter)"
+                id="input"
+                onKeyDown={(k) => {
+                  if (k.key == "Enter") {
+                    var input = (
+                      document.getElementById("input") as HTMLInputElement
+                    ).value;
+                    setSearchKeyword(input);
+                    openSearchDialog();
+                  }
+                }}
+                inputProps={{ "aria-label": "search" }}
+              />
+            </Search>
           </Stack>
         </Toolbar>
       </AppBar>
@@ -486,13 +840,18 @@ export default function directory({ params }: { params: { dir: string } }) {
                 </IconButton>
               </Grid>
               <Grid item>
-                <IconButton color="primary" href="/client/terminal">
+                <IconButton
+                  color="primary"
+                  href={"/client/terminal?dir=" + pathname}
+                  disabled={!authenticated}
+                >
                   <TerminalIcon fontSize="small" />
                 </IconButton>
               </Grid>
             </Grid>
 
             <br />
+
             <Divider />
             {isListView ? <ListView /> : <ListComp />}
           </FadeIn>
@@ -503,121 +862,110 @@ export default function directory({ params }: { params: { dir: string } }) {
 }
 
 var value: string = "";
-function AutoCompleteDirectory(props: {
-  onEmpty: () => void;
-  onUnempty: () => void;
-}): JSX.Element {
-  const { isLoading, data } = useFetch(`/api/file-api/getDirStruct`);
 
-  if (isLoading === true || data === undefined) {
+function SearchList(props: { pattern: string }) {
+  const { isLoading, data } = useFetch("/api/file-api/searchFS", {
+    headers: { pat: props.pattern },
+  });
+
+  if (isLoading) {
     return (
-      <TextField
-        autoFocus
-        margin="dense"
-        label="Folder Location"
-        fullWidth
-        onChange={(event) => {
-          value = event.target.value;
-        }}
-        variant="standard"
-      />
+      <>
+        <CircularProgress sx={{ pt: 5, ml: "auto", mr: "auto" }} />
+      </>
     );
   }
   return (
-    <Autocomplete
-      options={(data as any).data as string[]}
-      onInputChange={(ev, val) => {
-        var nonull = "";
-
-        if (val != null && val != "") {
-          nonull = val;
-
-          props.onUnempty();
-        } else {
-          props.onEmpty();
-        }
-
-        value = nonull;
-      }}
-      renderInput={(params) => (
-        <TextField
-          autoFocus
-          margin="dense"
-          value={value}
-          label="Folder Location"
-          variant="standard"
-          {...params}
-        />
-      )}
-    ></Autocomplete>
+    <>
+      <List>
+        {((data as any).data as string[]).map((elm) => (
+          <FadeIn>
+            <ListItem>
+              <ListItemButton>
+                <ListItemIcon>
+                  <FileOpenIcon />
+                </ListItemIcon>
+                <ListItemText
+                  primary={elm}
+                  secondary={
+                    <SizeChecking file={{ name: elm, type: "file" }} />
+                  }
+                />
+              </ListItemButton>
+            </ListItem>
+          </FadeIn>
+        ))}
+      </List>
+    </>
   );
 }
 
 function ListAllFiles(props: { dir: string }) {
-  const { isLoading, data } = useFetch(`/api/file-api/getDirFiles`, {
+  const [newDataComingIn, setDataIn] = useState(true);
+  const rand = Math.floor(Math.random() * 3);
+  var { isLoading, data } = useFetch(`/api/file-api/getDirFiles`, {
     headers: {
       "from-dir": decodeURI(pathname),
     },
+    depends: [newDataComingIn],
   });
+
+  const reloadFunction = React.useCallback(() => {
+    setDataIn(false);
+    setTimeout(() => {
+      setDataIn(true);
+    }, 50);
+  }, []);
   if (isLoading === true || data === undefined) {
-    return <></>;
+    return (
+      <>
+        {[...Array(rand)].map((e, i) => (
+          <Box>
+            <Skeleton variant="rounded" height={48} animation="wave" />
+            <br />
+            <Skeleton variant="rounded" height={48} animation="wave" />
+            <br />
+            <Skeleton variant="rounded" height={48} animation="wave" />
+            {rand == 2 && <br />}
+          </Box>
+        ))}
+        {rand == 0 && (
+          <Box>
+            <Skeleton variant="rounded" height={48} animation="wave" />
+            <br />
+            <Skeleton variant="rounded" height={48} animation="wave" />
+            <br />
+            <Skeleton variant="rounded" height={48} animation="wave" />
+          </Box>
+        )}
+      </>
+    );
   }
   return (
     <div>
-      <RemoveLoad />
-      <Box>
-        <Box sx={{ mb: 1 }}>
-          <Grid container spacing={{ xs: 6, md: 3 }}>
-            {((data as any).data as Array<{ type: string; name: string }>)
-              .length === 0 && (
-              <Grid item key={"key-" + Math.random() * Math.random() * Math.random() * Math.random()} xs={12} sm={6} md={4} lg={3}>
-                <Paper
-                  variant="outlined"
-                  sx={{
-                    p: 2,
-                    display: "flex",
-                    "& svg": {
-                      transition: "0.2s",
-                    },
-                    "&:hover": {
-                      "& svg": {
-                        transform: "translateY(-2px)",
-                      },
-                    },
-                  }}
-                >
-                  <Avatar
-                    sx={{
-                      borderRadius: "4px",
-                      width: 40,
-                      height: 40,
-                    }}
+      {newDataComingIn == true && (
+        <div>
+          <RemoveLoad />
+          <Box>
+            <Box sx={{ mb: 1 }}>
+              <Grid container spacing={{ xs: 6, md: 3 }}>
+                {((data as any).data as Array<{ type: string; name: string }>)
+                  .length === 0 && (
+                  <Grid
+                    item
+                    key={
+                      "key-" +
+                      Math.random() *
+                        Math.random() *
+                        Math.random() *
+                        Math.random()
+                    }
+                    xs={12}
+                    sm={6}
+                    md={4}
+                    lg={3}
                   >
-                    <Crop54Icon />
-                  </Avatar>
-                  <Box sx={{ ml: 2 }}>
-                    <Typography variant="body2" fontWeight="bold">
-                      Hmmm, it looks like nothing is here.
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Maybe look somewhere else.
-                    </Typography>
-                  </Box>
-                </Paper>
-              </Grid>
-            )}
-
-            {sortDirectory(
-              (data as any).data as Array<{ type: string; name: string }>
-            ).map((file) => (
-              <>
-                {file.type === "folder" && (
-                  <Grid item key={file.name} xs={12} sm={6} md={4} lg={3}>
                     <Paper
-                      href={
-                        "/client/files/" + join(decodeURI(pathname), file.name)
-                      }
-                      component={Link}
                       variant="outlined"
                       sx={{
                         p: 2,
@@ -639,36 +987,89 @@ function ListAllFiles(props: { dir: string }) {
                           height: 40,
                         }}
                       >
-                        <FolderIcon />
+                        <Crop54Icon />
                       </Avatar>
                       <Box sx={{ ml: 2 }}>
                         <Typography variant="body2" fontWeight="bold">
-                          {file.name}
+                          Hmmm, it looks like nothing is here.
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          <FileContents
-                            directory={join(decodeURI(pathname), file.name)}
-                          />
+                          Maybe look somewhere else.
                         </Typography>
                       </Box>
                     </Paper>
                   </Grid>
                 )}
+
+                {sortDirectory(
+                  (data as any).data as Array<{ type: string; name: string }>
+                ).map((file) => (
+                  <>
+                    {file.type === "folder" && (
+                      <Grid item key={file.name} xs={12} sm={6} md={4} lg={3}>
+                        <Paper
+                          href={
+                            "/client/files/" +
+                            join(decodeURI(pathname), file.name)
+                          }
+                          component={Link}
+                          variant="outlined"
+                          sx={{
+                            p: 2,
+                            display: "flex",
+                            "& svg": {
+                              transition: "0.2s",
+                            },
+                            "&:hover": {
+                              "& svg": {
+                                transform: "translateY(-2px)",
+                              },
+                            },
+                          }}
+                        >
+                          <Avatar
+                            sx={{
+                              borderRadius: "4px",
+                              width: 40,
+                              height: 40,
+                            }}
+                          >
+                            <FolderIcon />
+                          </Avatar>
+                          <Box sx={{ ml: 2 }}>
+                            <Typography variant="body2" fontWeight="bold">
+                              {file.name}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              <FileContents
+                                directory={join(decodeURI(pathname), file.name)}
+                              />
+                            </Typography>
+                          </Box>
+                        </Paper>
+                      </Grid>
+                    )}
+                  </>
+                ))}
+              </Grid>
+            </Box>
+          </Box>
+
+          <br />
+
+          <div>
+            {sortDirectory(
+              (data as any).data as Array<{ type: string; name: string }>
+            ).map((file) => (
+              <>
+                {file.type !== "folder" && (
+                  <FileLink file={file} refreshFunction={reloadFunction} />
+                )}
               </>
             ))}
-          </Grid>
-        </Box>
-      </Box>
-
-      <br />
-
-      <div>
-        {sortDirectory(
-          (data as any).data as Array<{ type: string; name: string }>
-        ).map((file) => (
-          <>{file.type !== "folder" && <FileLink file={file} />}</>
-        ))}
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -715,7 +1116,9 @@ function FileContents(props: { directory: string }): JSX.Element {
       {(data as any).data !== undefined && (
         <div>
           {((data as any).data as Array<{ type: string; name: string }>).length}{" "}
-          item{((data as any).data as Array<{ type: string; name: string }>).length != 1 && (<>s</>)}
+          item
+          {((data as any).data as Array<{ type: string; name: string }>)
+            .length != 1 && <>s</>}
         </div>
       )}
     </div>
@@ -756,8 +1159,9 @@ function downloadFile(file: { type: string; name: string }) {
 
           res.text().then((str) => {
             var link = document.createElement("a");
-            var windowUrl = window.URL || window.webkitURL;
+
             var text = str;
+            var windowUrl = window.URL || window.webkitURL;
 
             if (
               str.length > maxBase64 &&
@@ -770,6 +1174,7 @@ function downloadFile(file: { type: string; name: string }) {
               link.setAttribute("download", file.name);
 
               link.click();
+              URL.revokeObjectURL(url);
             } else {
               link.setAttribute(
                 "href",
@@ -781,6 +1186,7 @@ function downloadFile(file: { type: string; name: string }) {
               link.setAttribute("download", file.name);
               link.click();
             }
+
             resolve(undefined);
           });
         })
@@ -798,61 +1204,242 @@ function downloadFile(file: { type: string; name: string }) {
 
 function FileLink(props: {
   file: { type: string; name: string };
+  refreshFunction: () => void;
 }): JSX.Element {
   var [isBinary, setBinary] = useState(true);
+  var [renameOpen, setRandomOpen] = useState(false);
   fetch("/api/file-api/isBinary", {
-    headers: { file: pathname + props.file.name },
+    headers: { file: join(pathname, props.file.name) },
   })
     .then((res) => res.json())
     .then((result) => {
-      setBinary(result.result as boolean)
+      setBinary(result.result as boolean);
     });
 
-  return (
-    <Accordion>
-      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-        <Typography>{props.file.name}</Typography>
-      </AccordionSummary>
-      <AccordionDetails>
-        <List>
-          <ListItem>
-            <ListItemButton
+  const RenameComponent = (props: {
+    open: boolean;
+    setOpen: (b: boolean) => void;
+    file: { type: string; name: string };
+    refreshFunction: () => void;
+  }) => {
+    return (
+      <Dialog
+        open={props.open}
+        onClose={() => {
+          props.setOpen(false);
+        }}
+      >
+        <DialogTitle>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              p: 1,
+            }}
+          >
+            <Typography variant="body1" fontWeight="500">
+              Rename "{props.file.name}"
+            </Typography>
+            <IconButton
               onClick={() => {
-                downloadFile(props.file);
+                props.setOpen(false);
               }}
+              edge="end"
             >
-              <ListItemAvatar>
-                <Avatar sx={{ borderRadius: "4px", width: 40, height: 40 }}>
-                  <DownloadIcon />
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText
-                primary="Download"
-                secondary={<SizeChecking file={props.file} />}
-              />
-            </ListItemButton>
-          </ListItem>
-          <ListItem>
-            <ListItemButton
-              href={"/client/editor" + pathname + props.file.name}
-              disabled={isBinary}
-            >
-              <ListItemAvatar>
-                <Avatar sx={{ borderRadius: "4px", width: 40, height: 40 }}>
-                  <EditIcon />
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText
-                primary="Edit file"
-                secondary={
-                  isBinary ? "SFM cannot edit this file type." : undefined
+              <CloseIcon fontSize="small" />
+            </IconButton>
+          </Box>
+          <Divider />
+        </DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="renameText"
+            defaultValue={props.file.name}
+            fullWidth
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              var element: HTMLInputElement =
+                document.getElementById("renameText");
+              var value = element?.value;
+
+              toast.promise(
+                new Promise((good, bad) => {
+                  fetch("/api/file-api/renameFile", {
+                    headers: {
+                      file: join(pathname, props.file.name),
+                      newname: value,
+                    },
+                  })
+                    .then((r) => {
+                      props.refreshFunction();
+                      good("");
+                    })
+                    .catch(() => {
+                      bad();
+                    });
+                }),
+                {
+                  success: "Done renaming file.",
+                  loading: "Renaming file...",
+                  error: "Error renaming file.",
                 }
-              />
-            </ListItemButton>
-          </ListItem>
-        </List>
-      </AccordionDetails>
-    </Accordion>
+              );
+            }}
+          >
+            Done
+          </Button>
+        </DialogActions>
+      </Dialog>
+    );
+  };
+
+  return (
+    <>
+      <RenameComponent
+        open={renameOpen}
+        setOpen={setRandomOpen}
+        file={props.file}
+        refreshFunction={props.refreshFunction}
+      />
+      <Accordion>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography>{props.file.name}</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <List>
+            <ListItem>
+              <ListItemButton
+                onClick={() => {
+                  downloadFile(props.file);
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{ borderRadius: "4px", width: 40, height: 40 }}>
+                    <DownloadIcon />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary="Download"
+                  secondary={<SizeChecking file={props.file} />}
+                />
+              </ListItemButton>
+            </ListItem>
+            <ListItem>
+              <ListItemButton
+                href={"/client/editor" + join(pathname, props.file.name)}
+                disabled={isBinary}
+              >
+                <ListItemAvatar>
+                  <Avatar sx={{ borderRadius: "4px", width: 40, height: 40 }}>
+                    <EditIcon />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary="Edit file"
+                  secondary={
+                    isBinary
+                      ? "SFM cannot edit this file type."
+                      : "Enter the inbuilt editor"
+                  }
+                />
+              </ListItemButton>
+            </ListItem>
+
+            <PopupState variant="popper" popupId="demo-popup-popper">
+              {(popupState) => (
+                <div>
+                  <ListItem>
+                    <Popper
+                      {...bindPopper(popupState)}
+                      transition
+                      placement="bottom-start"
+                    >
+                      {({ TransitionProps }) => (
+                        <Fade {...TransitionProps} timeout={350}>
+                          <Paper elevation={5} style={{ width: 300 }}>
+                            <MenuList>
+                              <Heading sx={{ paddingLeft: 1.5 }}>
+                                Write Actions
+                              </Heading>
+                              <MenuItem
+                                onClick={() => {
+                                  toast.promise(
+                                    new Promise((resolve, error) => {
+                                      fetch("/api/file-api/deleteFile", {
+                                        headers: {
+                                          file: join(pathname, props.file.name),
+                                        },
+                                      })
+                                        .then(() => {
+                                          resolve("");
+                                          props.refreshFunction();
+                                        })
+                                        .catch(() => {
+                                          error("");
+                                        });
+                                    }),
+                                    {
+                                      success: "Successfully deleted file.",
+                                      error:
+                                        "There was an error deleting the file.",
+                                      loading: "Deleting....",
+                                    }
+                                  );
+                                }}
+                              >
+                                <ListItemIcon>
+                                  <DeleteIcon />
+                                </ListItemIcon>
+                                <ListItemText>Delete</ListItemText>
+                              </MenuItem>
+                              <MenuItem>
+                                <ListItemIcon>
+                                  <FolderIcon />
+                                </ListItemIcon>
+                                <ListItemText>Move</ListItemText>
+                              </MenuItem>
+                              <MenuItem
+                                onClick={() => {
+                                  setRandomOpen(true);
+                                }}
+                              >
+                                <ListItemIcon>
+                                  <EditIcon />
+                                </ListItemIcon>
+                                <ListItemText>Rename</ListItemText>
+                              </MenuItem>
+                            </MenuList>
+                          </Paper>
+                        </Fade>
+                      )}
+                    </Popper>
+                    <ListItemButton {...bindToggle(popupState)}>
+                      <ListItemAvatar>
+                        <Avatar
+                          sx={{ borderRadius: "4px", width: 40, height: 40 }}
+                        >
+                          <MoreVertIcon />
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary="More Actions"
+                        secondary="Delete, Move, Rena...."
+                      />
+                    </ListItemButton>
+                  </ListItem>
+                </div>
+              )}
+            </PopupState>
+          </List>
+        </AccordionDetails>
+      </Accordion>
+    </>
   );
 }
 

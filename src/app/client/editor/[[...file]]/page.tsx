@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import "xterm/css/xterm.css";
+import { Toaster, toast } from "react-hot-toast"
 import "../../styles/Terminal.css";
 import loader from "@monaco-editor/loader";
 import { editor } from "monaco-editor";
@@ -57,11 +58,28 @@ export default function TerminalPage() {
   const [open, setOpen] = useState(false);
   const [diaOpen, setDiaOpen] = useState(false);
   const [disabled, setDisabled] = useState(true);
+  var name = window.location.pathname.split("/");
+  name.shift();
+  name.shift();
+  name.shift();
+  var pathname = "/" + name.join("/");
   const [isListView, setListView] = useState(false);
   const [openFolderOpen, setOpenFolderOpen] = useState(false);
 
   return (
     <>
+      <Toaster
+        position="bottom-left"
+        reverseOrder={false}
+        toastOptions={{
+          style: {
+            background: "#333",
+            color: "#fff",
+            fontFamily:
+              "ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica Neue,Arial,Noto Sans,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol,Noto Color Emoji",
+          },
+        }}
+      />
       <AppBar className="appBar" color="inherit">
         <Toolbar>
           <Stack direction="row" spacing="10px">
@@ -95,36 +113,20 @@ export default function TerminalPage() {
                             <Heading sx={{ paddingLeft: 1.5 }}>Open</Heading>
                             <MenuItem
                               onClick={() => {
-                                setOpenFolderOpen(true);
+                                  window.location.href =
+                                    "/client/files" + path.resolve(pathname, "../")
                                 popupState.close();
                               }}
                             >
                               <ListItemIcon>
                                 <FolderOpenIcon />
                               </ListItemIcon>
-                              <ListItemText>Open folder</ListItemText>
+                              <ListItemText>Go back to files</ListItemText>
                               <Typography
                                 variant="body2"
                                 color="text.secondary"
                               >
                                 Ctrl+Shift+A
-                              </Typography>
-                            </MenuItem>
-                            <MenuItem
-                              onClick={() => {
-                                window.location.pathname = "|sfm/plugins";
-                                popupState.close();
-                              }}
-                            >
-                              <ListItemIcon>
-                                <ExtensionIcon />
-                              </ListItemIcon>
-                              <ListItemText>Open plugins</ListItemText>
-                              <Typography
-                                variant="body2"
-                                color="text.secondary"
-                              >
-                                Ctrl+Shift+N
                               </Typography>
                             </MenuItem>
                             <Divider />
@@ -159,15 +161,6 @@ export default function TerminalPage() {
           <Stack direction="row" spacing="10px">
             <IconButton color="primary" sx={{ px: "8px" }}>
               <GitHubIcon fontSize="small" />
-            </IconButton>
-            <IconButton
-              color="primary"
-              sx={{ px: "8px" }}
-              onClick={() => {
-                setOpen(true);
-              }}
-            >
-              <SettingsOutlinedIcon fontSize="small" />
             </IconButton>
           </Stack>
         </Toolbar>
@@ -255,12 +248,19 @@ const TerminalU = () => {
           <IconButton
             color="primary"
             onClick={() => {
-              fetch("/api/file-api/writeFile", {
-                headers: {
-                  file: decodeURI(pathname),
-                  write: btoa(curEditor.getValue()),
-                },
-              });
+              toast.promise(new Promise((success, fail) => {
+                fetch("/api/file-api/writeFile", {
+                  headers: {
+                    file: decodeURI(pathname),
+                    write: btoa(curEditor.getValue()),
+                  },
+                }).then(() => {
+                  success("")
+                }).catch(() => {
+                  fail("Error requesting")
+                })
+              }), { success: "Done.", loading: "Saving file..", error: "There was a problem saving the file." })
+
             }}
             disabled={!savable}
           >
