@@ -7,11 +7,12 @@ import * as pty from "node-pty";
 import { Server } from "socket.io";
 console.log();
 var nextCode = 1;
-var setupYet = YAML.parse(
-  fs.readFileSync("configuration/settings.yml", "utf-8")
-).setupYet;
+
 
 export default function enable(server) {
+  var setupYet = YAML.parse(
+    fs.readFileSync("configuration/settings.yml", "utf-8")
+  ).setupYet;
   const spinner = ora("Getting ready.....");
   spinner.start();
   const isWin = process.platform === "win32";

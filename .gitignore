@@ -64,3 +64,6 @@ configuration
 /gui/npm-debug.log*
 /gui/yarn-debug.log*
 /gui/yarn-error.log*
+
+# user-specific
+/configuration/*

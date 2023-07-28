@@ -42,11 +42,6 @@ function Copyright(props: any) {
   );
 }
 
-export const metadata: Metadata = {
-  title: "Login | SFM",
-  description: "Login to continue.",
-};
-
 export default function SignInSide() {
   var [open, setOpen] = React.useState(true);
   var [error, setError] = React.useState(false);

@@ -15,7 +15,7 @@ app.prepare().then(() => {
     handle(req, res, parsedUrl);
   })
   server.listen(3000, (err) => {
-    enable(server)
+    
     // figure out if the configuration folder exists yet
     if (!fs.existsSync("configuration/")) {
       fs.mkdirSync("configuration/");
@@ -25,6 +25,8 @@ app.prepare().then(() => {
       );
       fs.writeFileSync("configuration/stats.yml", "apiUsage:");
     }
+
+    enable(server)
 
     if (err) throw err;
   });
